@@ -3,9 +3,9 @@ from langgraph.types import Command
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START 
-from util import make_supervisor_node, State
-from research_team import research_graph
-from document_writing_team import paper_writing_graph
+from .util import make_supervisor_node, State
+from .research_team import research_graph
+from .document_writing_team import paper_writing_graph
 
 llm = ChatOpenAI(model="gpt-4o")
 
