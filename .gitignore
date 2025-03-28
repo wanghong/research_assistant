@@ -1,0 +1,4 @@
+.DS_Store
+backend/app/__pycache__/
+.vscode/
+.nvmrc
