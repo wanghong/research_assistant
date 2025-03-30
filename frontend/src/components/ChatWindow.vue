@@ -8,8 +8,8 @@
         </div>
       </div>
       <div class="input-area">
-        <el-input v-model="inputMessage" placeholder="输入消息" @keyup.enter="sendMessage"></el-input>
-        <el-button @click="sendMessage">发送</el-button>
+        <el-input v-model="inputMessage" placeholder="" @keyup.enter="sendMessage"></el-input>
+        <el-button @click="sendMessage">Send</el-button>
       </div>
     </div>
   </template>
@@ -23,61 +23,37 @@
   const sendMessage = async() => {
     if (inputMessage.value.trim() === '') return;
     messages.value.push({ sender: 'user', content: inputMessage.value });
-    //await sendRequest(inputMessage.value);
     fetchStream(inputMessage.value);
     inputMessage.value = '';
   };
 
   const fetchStream = (question) => {
-    const eventSource = new EventSource('/api');
+    const eventSource = new EventSource(`/api?question=${encodeURIComponent(question)}`);
 
     eventSource.onmessage = function (event) {
       console.log(event.data)
+      let data = JSON.parse(event.data);
+      data = data.content;
       const lastMessageIndex = messages.value.length - 1;
       if (lastMessageIndex >= 0 && messages.value[lastMessageIndex].sender === 'ai') {
-          messages.value[lastMessageIndex].content += event.data;
+          messages.value[lastMessageIndex].content += data;
         } else {
-          messages.value.push({ sender: 'ai', content: event.data});
+          messages.value.push({ sender: 'ai', content: data});
         }
+    };
+
+    eventSource.onclose = function () {
+      // 关闭 EventSource
+      eventSource.close();
+      console.log('EventSource 已关闭');
     };
 
     eventSource.onerror = function (error) {
-      console.error('EventSource failed:', error);
+      console.error('EventSource 失败:', error);
+      // 关闭 EventSource
+      eventSource.close();
     };
   }
-  
-  const sendRequest = async (message) => {
-    try {
-      const response = await fetch('api', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ input: message })
-      });
-
-      if (!response.ok) {
-        throw new Error(`请求失败，状态码: ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lastMessageIndex = messages.value.length - 1;
-        if (lastMessageIndex >= 0 && messages.value[lastMessageIndex].sender === 'ai') {
-          messages.value[lastMessageIndex].content += chunk;
-        } else {
-          messages.value.push({ sender: 'ai', content: chunk});
-        }
-      }
-    } catch (error) {
-      console.error('请求出错:', error);
-    }
-  };
   </script>
   
   <style scoped>
@@ -119,6 +95,7 @@
     border-radius: 20px; /* 增大消息框的圆角 */
     max-width: 70%;
     line-height: 1.5;
+    text-align: left;
   }
   
   .user-message .message-content {
