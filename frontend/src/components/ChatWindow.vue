@@ -1,21 +1,27 @@
 <template>
-    <div class="chat-window">
-      <div class="chat-messages">
-        <div v-for="(message, index) in messages" :key="index" :class="message.sender === 'user' ? 'user-message' : 'ai-message'">
-          <div class="message-content">
-            {{ message.content }}
+  <div class="chat-window">
+    <div class="chat-messages">
+      <div v-for="(message, index) in messages" :key="index"
+        :class="message.sender === 'user' ? 'user-message' : 'ai-message'">
+        <div class="message-content">
+          <div v-if="message.sender === 'user'">
+            {{message.content}}
+          </div>
+          <div v-else>
+            <v-md-preview :text="message.content"></v-md-preview>
           </div>
         </div>
       </div>
-      <div class="input-area">
-        <el-input v-model="inputMessage" placeholder="" @keyup.enter="sendMessage"></el-input>
-        <el-button @click="sendMessage">Send</el-button>
-      </div>
     </div>
-  </template>
+    <div class="input-area">
+      <el-input v-model="inputMessage" placeholder="Please enter your question." @keyup.enter="sendMessage"></el-input>
+      <el-button @click="sendMessage">Send</el-button>
+    </div>
+  </div>
+</template>
   
   <script setup>
-  import { ref } from 'vue';
+  import {ref} from 'vue'
   
   const messages = ref([]);
   const inputMessage = ref('');
@@ -31,8 +37,13 @@
     const eventSource = new EventSource(`/api?question=${encodeURIComponent(question)}`);
 
     eventSource.onmessage = function (event) {
-      console.log(event.data)
+      if (event.data === '[DONE]') {
+        eventSource.close();
+        return;
+      }
+
       let data = JSON.parse(event.data);
+
       data = data.content;
       const lastMessageIndex = messages.value.length - 1;
       if (lastMessageIndex >= 0 && messages.value[lastMessageIndex].sender === 'ai') {

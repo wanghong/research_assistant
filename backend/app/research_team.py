@@ -12,7 +12,7 @@ from app.research_team_tools import scrape_webpages, tavily_tool
 # llm = ChatOpenAI(model="gpt-4o")
 llm = ChatDeepSeek(model="deepseek-chat")
 
-search_agent = create_react_agent(llm, tools=[tavily_tool])
+search_agent = create_react_agent(llm, tools=[tavily_tool], name="Search Agent")
 
 
 def search_node(state: State) -> Command[Literal["supervisor"]]:
@@ -28,7 +28,7 @@ def search_node(state: State) -> Command[Literal["supervisor"]]:
     )
 
 
-web_scraper_agent = create_react_agent(llm, tools=[scrape_webpages])
+web_scraper_agent = create_react_agent(llm, tools=[scrape_webpages], name="Web Scraper")
 
 
 def web_scraper_node(state: State) -> Command[Literal["supervisor"]]:
