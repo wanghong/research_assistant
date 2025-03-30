@@ -12,6 +12,12 @@
           </div>
         </div>
       </div>
+      <!-- 添加加载指示器 -->
+      <div v-if="isLoading" class="ai-message">
+        <div class="message-content loading-indicator">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
     </div>
     <div class="input-area">
       <el-input v-model="inputMessage" placeholder="Please enter your question." @keyup.enter="sendMessage"></el-input>
@@ -25,10 +31,12 @@
   
   const messages = ref([]);
   const inputMessage = ref('');
+  const isLoading = ref(false);
   
   const sendMessage = async() => {
     if (inputMessage.value.trim() === '') return;
     messages.value.push({ sender: 'user', content: inputMessage.value });
+    isLoading.value = true;
     fetchStream(inputMessage.value);
     inputMessage.value = '';
   };
@@ -43,8 +51,10 @@
       }
 
       let data = JSON.parse(event.data);
-
       data = data.content;
+      if (data === '') return;
+      isLoading.value = false;
+      
       const lastMessageIndex = messages.value.length - 1;
       if (lastMessageIndex >= 0 && messages.value[lastMessageIndex].sender === 'ai') {
           messages.value[lastMessageIndex].content += data;
@@ -56,6 +66,7 @@
     eventSource.onclose = function () {
       // 关闭 EventSource
       eventSource.close();
+      isLoading.value = false;
       console.log('EventSource 已关闭');
     };
 
@@ -63,6 +74,7 @@
       console.error('EventSource 失败:', error);
       // 关闭 EventSource
       eventSource.close();
+      isLoading.value = false;
     };
   }
   </script>
@@ -139,4 +151,26 @@
     font-size: 16px;
     padding: 0 20px; /* 增大按钮内文字的左右内边距 */
   }
-  </style>    
+  
+  /* 添加加载指示器样式 */
+  .loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+    min-width: 60px;
+  }
+  
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #007aff;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  </style>
