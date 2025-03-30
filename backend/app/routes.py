@@ -21,6 +21,8 @@ def index():
             ):
                 if isinstance(s[0], ToolMessage):
                     continue
+                if (s[1] and s[1]['langgraph_node'] == "supervisor"):
+                    continue
                 content = s[0].content
                 data = json.dumps({"content": content})
                 yield f"data:{data}\n\n"
@@ -28,7 +30,9 @@ def index():
         except Exception as e:
             # 记录异常信息
             print(f"Error in streaming: {e}")
-            # 可以选择发送错误信息给客户端
-            yield f"data:Error occurred: {str(e)}\n\n"
+            # 发送错误信息给客户端
+            error_message = {"content": f"抱歉，处理您的请求时出现错误: {str(e)}"}
+            yield f"data:{json.dumps(error_message)}\n\n"
+            yield f"data: [DONE]\n\n"
 
     return Response(generate(), mimetype='text/event-stream')

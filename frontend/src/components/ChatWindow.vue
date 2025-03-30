@@ -1,6 +1,6 @@
 <template>
   <div class="chat-window">
-    <div class="chat-messages">
+    <div class="chat-messages" ref="chatMessagesRef">
       <div v-for="(message, index) in messages" :key="index"
         :class="message.sender === 'user' ? 'user-message' : 'ai-message'">
         <div class="message-content">
@@ -27,11 +27,32 @@
 </template>
   
   <script setup>
-  import {ref} from 'vue'
+  import {ref, nextTick, watch} from 'vue'
   
   const messages = ref([]);
   const inputMessage = ref('');
   const isLoading = ref(false);
+  const chatMessagesRef = ref(null);
+  
+  // 滚动到底部的方法
+  const scrollToBottom = async () => {
+    await nextTick();
+    if (chatMessagesRef.value) {
+      chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight;
+    }
+  };
+  
+  // 监听消息变化，自动滚动到底部
+  watch(() => [...messages.value], () => {
+    scrollToBottom();
+  }, { deep: true });
+  
+  // 监听加载状态变化，当加载指示器出现时也滚动到底部
+  watch(() => isLoading.value, (newVal) => {
+    if (newVal) {
+      scrollToBottom();
+    }
+  });
   
   const sendMessage = async() => {
     if (inputMessage.value.trim() === '') return;
@@ -39,6 +60,8 @@
     isLoading.value = true;
     fetchStream(inputMessage.value);
     inputMessage.value = '';
+    // 发送消息后滚动到底部
+    scrollToBottom();
   };
 
   const fetchStream = (question) => {
@@ -47,6 +70,8 @@
     eventSource.onmessage = function (event) {
       if (event.data === '[DONE]') {
         eventSource.close();
+        isLoading.value = false;
+        scrollToBottom(); // 消息结束时滚动到底部
         return;
       }
 
@@ -61,6 +86,7 @@
         } else {
           messages.value.push({ sender: 'ai', content: data});
         }
+      // 不需要在这里调用scrollToBottom，因为watch会处理
     };
 
     eventSource.onclose = function () {
