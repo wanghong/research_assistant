@@ -4,13 +4,13 @@ from langgraph.prebuilt import create_react_agent
 from typing import Literal
 from langgraph.types import Command
 from langchain_openai import ChatOpenAI
-#from langchain_deepseek import ChatDeepSeek
+from langchain_deepseek import ChatDeepSeek
 from langgraph.graph import StateGraph, START
 from .util import make_supervisor_node, State
 from .document_writing_team_tools import write_document, edit_document, read_document, create_outline, python_repl_tool
 
-llm = ChatOpenAI(model="gpt-4o")
-# llm = ChatDeepSeek(model="deepseek-chat")
+#llm = ChatOpenAI(model="gpt-4o")
+llm = ChatDeepSeek(model="deepseek-chat")
 
 doc_writer_agent = create_react_agent(
     llm,

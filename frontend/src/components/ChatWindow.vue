@@ -8,7 +8,13 @@
             {{message.content}}
           </div>
           <div v-else>
-            <v-md-preview :text="message.content"></v-md-preview>
+            <!-- 修改这里，调整小点位置 -->
+            <div class="markdown-container">
+              <v-md-preview :text="message.content"></v-md-preview>
+              <div class="progress-container" v-if="index === messages.length - 1 && message.sender === 'ai' && isStreaming">
+                <div class="progress-bar"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -20,8 +26,8 @@
       </div>
     </div>
     <div class="input-area">
-      <el-input v-model="inputMessage" placeholder="Please enter your question." @keyup.enter="sendMessage"></el-input>
-      <el-button @click="sendMessage">Send</el-button>
+      <el-input v-model="inputMessage" placeholder="Please enter your question." @keyup.enter="sendMessage" :disabled="isLoading || isStreaming"></el-input>
+      <el-button @click="sendMessage" :disabled="isLoading || isStreaming">Send</el-button>
     </div>
   </div>
 </template>
@@ -33,6 +39,7 @@
   const inputMessage = ref('');
   const isLoading = ref(false);
   const chatMessagesRef = ref(null);
+  const isStreaming = ref(false); // 添加流式输出状态变量
   
   // 滚动到底部的方法
   const scrollToBottom = async () => {
@@ -48,9 +55,16 @@
   }, { deep: true });
   
   // 监听加载状态变化，当加载指示器出现时也滚动到底部
-  watch(() => isLoading.value, (newVal) => {
+  watch(() => isLoading.value, (newVal, oldVal) => {
     if (newVal) {
       scrollToBottom();
+    } else if (oldVal && !newVal) {
+      // 当isLoading从true变为false时，确保AI消息宽度固定为80%
+      const aiMessages = document.querySelectorAll('.ai-message .message-content');
+      if (aiMessages.length > 0) {
+        const lastAiMessage = aiMessages[aiMessages.length - 1];
+        lastAiMessage.style.width = '80%';
+      }
     }
   });
   
@@ -71,6 +85,7 @@
       if (event.data === '[DONE]') {
         eventSource.close();
         isLoading.value = false;
+        isStreaming.value = false; // 流式输出结束，移除动态小点
         scrollToBottom(); // 消息结束时滚动到底部
         return;
       }
@@ -79,6 +94,7 @@
       data = data.content;
       if (data === '') return;
       isLoading.value = false;
+      isStreaming.value = true; // 开始流式输出，显示动态小点
       
       const lastMessageIndex = messages.value.length - 1;
       if (lastMessageIndex >= 0 && messages.value[lastMessageIndex].sender === 'ai') {
@@ -93,6 +109,7 @@
       // 关闭 EventSource
       eventSource.close();
       isLoading.value = false;
+      isStreaming.value = false; // 连接关闭，移除动态小点
       console.log('EventSource 已关闭');
     };
 
@@ -101,6 +118,7 @@
       // 关闭 EventSource
       eventSource.close();
       isLoading.value = false;
+      isStreaming.value = false; // 发生错误，移除动态小点
     };
   }
   </script>
@@ -140,9 +158,8 @@
   }
   
   .message-content {
-    padding: 15px 20px; /* 增大消息内容的内边距 */
     border-radius: 20px; /* 增大消息框的圆角 */
-    max-width: 70%;
+    max-width: 80%;
     line-height: 1.5;
     text-align: left;
   }
@@ -151,12 +168,15 @@
     background-color: #007aff;
     color: white;
     box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+    padding: 14px 20px; /* 增大消息内容的内边距 */
   }
   
   .ai-message .message-content {
     background-color: #f0f0f0;
     color: #333;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: auto; /* 默认宽度为自适应 */
+    transition: width 0.3s ease; /* 添加过渡效果 */
   }
   
   .input-area {
@@ -176,6 +196,45 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 16px;
     padding: 0 20px; /* 增大按钮内文字的左右内边距 */
+  }
+
+  .progress-container {
+    width: 90%;
+    height: 3px;
+    margin: 8px auto 0;
+    overflow: hidden;
+    position: relative;
+    border-radius: 1.5px;
+  }
+  
+  /* 添加进度条样式 */
+  .progress-bar {
+    position: absolute;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, #007aff, transparent);
+    animation: shimmer 2s infinite;
+  }
+  
+  /* 添加进度条动画 */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(300%);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
   }
   
   /* 添加加载指示器样式 */

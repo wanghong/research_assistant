@@ -2,14 +2,14 @@ from typing import Literal
 from langgraph.types import Command
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-#from langchain_deepseek import ChatDeepSeek
+from langchain_deepseek import ChatDeepSeek
 from langgraph.graph import StateGraph, START 
 from .util import make_supervisor_node, State
 from .research_team import research_graph
 from .document_writing_team import paper_writing_graph
 
-llm = ChatOpenAI(model="gpt-4o")
-#llm = ChatDeepSeek(model="deepseek-chat")
+#llm = ChatOpenAI(model="gpt-4o")
+llm = ChatDeepSeek(model="deepseek-chat")
 
 teams_supervisor_node = make_supervisor_node(llm, ["research_team", "writing_team"])
 
