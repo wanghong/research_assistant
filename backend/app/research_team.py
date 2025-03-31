@@ -3,17 +3,14 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 from typing import Literal
 from langgraph.types import Command
-#from langchain_openai import ChatOpenAI
-from langchain_deepseek import ChatDeepSeek
+from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START
 from app.util import make_supervisor_node, State
 from app.research_team_tools import scrape_webpages, tavily_tool
 
-#llm = ChatOpenAI(model="gpt-4o")
-llm = ChatDeepSeek(model="deepseek-chat")
+llm = ChatOpenAI(model="gpt-4o")
 
 search_agent = create_react_agent(llm, tools=[tavily_tool])
-
 
 def search_node(state: State) -> Command[Literal["supervisor"]]:
     result = search_agent.invoke(state)

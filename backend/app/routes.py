@@ -28,10 +28,8 @@ def index():
                 yield f"data:{data}\n\n"
             yield f"data: [DONE]\n\n"
         except Exception as e:
-            # 记录异常信息
             print(f"Error in streaming: {e}")
-            # 发送错误信息给客户端
-            error_message = {"content": f"抱歉，处理您的请求时出现错误: {str(e)}"}
+            error_message = {"content": f"Sorry, an error occurred while processing your request: {str(e)}"}
             yield f"data:{json.dumps(error_message)}\n\n"
             yield f"data: [DONE]\n\n"
 

@@ -8,7 +8,6 @@
             {{message.content}}
           </div>
           <div v-else>
-            <!-- 修改这里，调整小点位置 -->
             <div class="markdown-container">
               <v-md-preview :text="message.content"></v-md-preview>
               <div class="progress-container" v-if="index === messages.length - 1 && message.sender === 'ai' && isStreaming">
@@ -18,7 +17,6 @@
           </div>
         </div>
       </div>
-      <!-- 添加加载指示器 -->
       <div v-if="isLoading" class="ai-message">
         <div class="message-content loading-indicator">
           <div class="loading-spinner"></div>
@@ -35,13 +33,16 @@
   <script setup>
   import {ref, nextTick, watch} from 'vue'
   
+  // chat messages
   const messages = ref([]);
+  // user input message
   const inputMessage = ref('');
+  // loading state
   const isLoading = ref(false);
   const chatMessagesRef = ref(null);
-  const isStreaming = ref(false); // 添加流式输出状态变量
+  // streaming output state
+  const isStreaming = ref(false);
   
-  // 滚动到底部的方法
   const scrollToBottom = async () => {
     await nextTick();
     if (chatMessagesRef.value) {
@@ -49,17 +50,16 @@
     }
   };
   
-  // 监听消息变化，自动滚动到底部
+  // watching messages, if messages changed, scroll to bottom
   watch(() => [...messages.value], () => {
     scrollToBottom();
   }, { deep: true });
   
-  // 监听加载状态变化，当加载指示器出现时也滚动到底部
+  // watching isLoading, if isLoading changed, scroll to bottom
   watch(() => isLoading.value, (newVal, oldVal) => {
     if (newVal) {
       scrollToBottom();
     } else if (oldVal && !newVal) {
-      // 当isLoading从true变为false时，确保AI消息宽度固定为80%
       const aiMessages = document.querySelectorAll('.ai-message .message-content');
       if (aiMessages.length > 0) {
         const lastAiMessage = aiMessages[aiMessages.length - 1];
@@ -74,7 +74,7 @@
     isLoading.value = true;
     fetchStream(inputMessage.value);
     inputMessage.value = '';
-    // 发送消息后滚动到底部
+    // scroll to bottom after sending message
     scrollToBottom();
   };
 
@@ -85,8 +85,8 @@
       if (event.data === '[DONE]') {
         eventSource.close();
         isLoading.value = false;
-        isStreaming.value = false; // 流式输出结束，移除动态小点
-        scrollToBottom(); // 消息结束时滚动到底部
+        isStreaming.value = false; 
+        scrollToBottom(); 
         return;
       }
 
@@ -94,7 +94,7 @@
       data = data.content;
       if (data === '') return;
       isLoading.value = false;
-      isStreaming.value = true; // 开始流式输出，显示动态小点
+      isStreaming.value = true;
       
       const lastMessageIndex = messages.value.length - 1;
       if (lastMessageIndex >= 0 && messages.value[lastMessageIndex].sender === 'ai') {
@@ -102,35 +102,32 @@
         } else {
           messages.value.push({ sender: 'ai', content: data});
         }
-      // 不需要在这里调用scrollToBottom，因为watch会处理
     };
 
     eventSource.onclose = function () {
-      // 关闭 EventSource
       eventSource.close();
       isLoading.value = false;
-      isStreaming.value = false; // 连接关闭，移除动态小点
-      console.log('EventSource 已关闭');
+      isStreaming.value = false;
+      console.log('EventSource closed');
     };
 
     eventSource.onerror = function (error) {
-      console.error('EventSource 失败:', error);
-      // 关闭 EventSource
+      console.error('EventSource error:', error);
       eventSource.close();
       isLoading.value = false;
-      isStreaming.value = false; // 发生错误，移除动态小点
+      isStreaming.value = false;
     };
   }
   </script>
   
   <style scoped>
   .chat-window {
-    max-width: 800px; /* 增大最大宽度 */
+    max-width: 800px;
     margin: 0 auto;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 20px; /* 增大内边距 */
-    height: 700px; /* 增大高度 */
+    padding: 20px;
+    height: 700px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -141,24 +138,24 @@
   .chat-messages {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 20px; /* 增大底部边距 */
-    padding-right: 10px; /* 增大右侧内边距 */
+    margin-bottom: 20px;
+    padding-right: 10px;
   }
   
   .user-message {
     display: flex;
     justify-content: flex-end;
-    margin-bottom: 15px; /* 增大消息之间的底部边距 */
+    margin-bottom: 15px;
   }
   
   .ai-message {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 15px; /* 增大消息之间的底部边距 */
+    margin-bottom: 15px;
   }
   
   .message-content {
-    border-radius: 20px; /* 增大消息框的圆角 */
+    border-radius: 20px;
     max-width: 80%;
     line-height: 1.5;
     text-align: left;
@@ -168,34 +165,34 @@
     background-color: #007aff;
     color: white;
     box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
-    padding: 14px 20px; /* 增大消息内容的内边距 */
+    padding: 14px 20px;
   }
   
   .ai-message .message-content {
     background-color: #f0f0f0;
     color: #333;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: auto; /* 默认宽度为自适应 */
-    transition: width 0.3s ease; /* 添加过渡效果 */
+    width: auto;
+    transition: width 0.3s ease;
   }
   
   .input-area {
     display: flex;
-    gap: 15px; /* 增大输入框和按钮之间的间距 */
+    gap: 15px;
   }
   
   .input-area .el-input__inner {
-    border-radius: 25px; /* 增大输入框的圆角 */
+    border-radius: 25px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 16px;
-    padding: 12px 15px; /* 增大输入框内文字的内边距 */
+    padding: 12px 15px; 
   }
   
   .input-area .el-button {
-    border-radius: 25px; /* 增大按钮的圆角 */
+    border-radius: 25px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 16px;
-    padding: 0 20px; /* 增大按钮内文字的左右内边距 */
+    padding: 0 20px;
   }
 
   .progress-container {
@@ -207,7 +204,6 @@
     border-radius: 1.5px;
   }
   
-  /* 添加进度条样式 */
   .progress-bar {
     position: absolute;
     width: 30%;
@@ -216,7 +212,6 @@
     animation: shimmer 2s infinite;
   }
   
-  /* 添加进度条动画 */
   @keyframes shimmer {
     0% {
       transform: translateX(-100%);
@@ -237,7 +232,6 @@
     }
   }
   
-  /* 添加加载指示器样式 */
   .loading-indicator {
     display: flex;
     justify-content: center;

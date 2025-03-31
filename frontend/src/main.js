@@ -18,4 +18,5 @@ import App from './App.vue';
 const app = createApp(App);
 app.use(ElementPlus);
 app.use(VMdPreview);
+
 app.mount('#app');
