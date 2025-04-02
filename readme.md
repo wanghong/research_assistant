@@ -9,13 +9,13 @@ pip install -r requirements.txt
 set the following environment variables:
 ```shell
 export OPENAI_API_KEY=your_openai_api_key
-export TRIVIA_API_KEY=your_trivia_api_key
+export TAVILY_API_KEY=your_trivia_api_key
 ```
 or create an **.env** file in the backend root directory and add the following line:
 
 ```shell
 OPENAI_API_KEY=your_openai_api_key
-TRIVIA_API_KEY=your_trivia_api_key
+TAVILY_API_KEY=your_trivia_api_key
 ```
 ## 3. start server
 
